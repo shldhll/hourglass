@@ -38,7 +38,8 @@ func (c Current) GetApplicationName() (appName string) {
 	}
 
 	windowName := windowNameCmdSplitRes[1]
-	appName = windowName
+	windowNameSplitRes := strings.Split(strings.ReplaceAll(windowName, "\"", ""), " - ")
+	appName = windowNameSplitRes[len(windowNameSplitRes)-1]
 
 	return appName
 }
