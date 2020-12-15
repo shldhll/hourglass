@@ -17,3 +17,8 @@ func (b BadgerDB) Read(id string) (Entry, error) {
 	var e Entry
 	return e, nil
 }
+
+// GetKey returns key of the entry
+func (b BadgerDB) GetKey(entry Entry) string {
+	return entry.ID
+}
