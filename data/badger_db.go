@@ -18,7 +18,21 @@ func (b BadgerDB) Read(id string) (Entry, error) {
 	return e, nil
 }
 
+// Close closes connection to database
+func (b BadgerDB) Close() error {
+	return b.db.Close()
+}
+
 // GetKey returns key of the entry
 func (b BadgerDB) GetKey(entry Entry) string {
 	return entry.ID
+}
+
+// GetBadgerDB returns a reference to BadgerDB struct
+func GetBadgerDB(location string) (*BadgerDB, error) {
+	db, err := badger.Open(badger.DefaultOptions(location))
+	badgerDB := &BadgerDB{
+		db:	db,
+	}
+	return badgerDB, err
 }
