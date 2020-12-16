@@ -63,7 +63,10 @@ func (b BadgerDBUtilsDefault) Encode(entry Entry) ([]byte, error) {
 
 // Decode returns entry after decoding the given value
 func (b BadgerDBUtilsDefault) Decode(value []byte) (Entry, error) {
-	return nil, nil
+	var entry Entry
+	d := gob.NewDecoder(bytes.NewReader(value))
+	err := d.Decode(&entry)
+	return entry, err
 }
 
 // EncodeList returns encoded value of the given entry list
