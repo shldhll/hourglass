@@ -47,3 +47,23 @@ type BadgerDBUtils interface {
 
 // BadgerDBUtilsDefault represents default implementation of BadgerDBUtils
 type BadgerDBUtilsDefault struct{}
+
+// Encode returns encoded value of the given entry
+func (b BadgerDBUtilsDefault) Encode(entry Entry) ([]byte, error) {
+	return nil, nil
+}
+
+// Decode returns entry after decoding the given value
+func (b BadgerDBUtilsDefault) Decode(value []byte) (Entry, error) {
+	return nil, nil
+}
+
+// EncodeList returns encoded value of the given entry list
+func (b BadgerDBUtilsDefault) EncodeList(entryList []Entry) ([]byte, error) {
+	return nil, nil
+}
+
+// DecodeList returns entry after decoding the given value
+func (b BadgerDBUtilsDefault) DecodeList(value []byte) ([]Entry, error) {
+	return nil, nil
+}
