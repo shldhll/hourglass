@@ -1,6 +1,11 @@
 package data
 
-import "github.com/dgraph-io/badger"
+import (
+	"bytes"
+	"encoding/gob"
+
+	"github.com/dgraph-io/badger"
+)
 
 // BadgerDB represents a Badger database
 type BadgerDB struct {
@@ -50,7 +55,10 @@ type BadgerDBUtilsDefault struct{}
 
 // Encode returns encoded value of the given entry
 func (b BadgerDBUtilsDefault) Encode(entry Entry) ([]byte, error) {
-	return nil, nil
+	var buff bytes.Buffer
+	e := gob.NewEncoder(&buff)
+	err := e.Encode(entry)
+	return buff.Bytes(), err
 }
 
 // Decode returns entry after decoding the given value
