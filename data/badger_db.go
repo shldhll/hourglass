@@ -36,3 +36,14 @@ func GetBadgerDB(location string) (*BadgerDB, error) {
 	}
 	return badgerDB, err
 }
+
+// BadgerDBUtils represents functions required for calling DB functions
+type BadgerDBUtils interface {
+	Encode(Entry) ([]byte, error)
+	Decode([]byte) (Entry, error)
+	EncodeList([]Entry) ([]byte, error)
+	DecodeList([]byte) ([]Entry, error)
+}
+
+// BadgerDBUtilsDefault represents default implementation of BadgerDBUtils
+type BadgerDBUtilsDefault struct{}
