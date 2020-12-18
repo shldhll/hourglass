@@ -1,11 +1,15 @@
 package data
 
 import (
+	"strings"
 	"bytes"
 	"encoding/gob"
 
 	"github.com/dgraph-io/badger"
 )
+
+// EntryIDDateSeparator is used for separating date from the rest
+const EntryIDDateSeparator = "_"
 
 // BadgerDB represents a Badger database
 type BadgerDB struct {
@@ -32,6 +36,13 @@ func (b BadgerDB) Close() error {
 // GetKey returns key of the entry
 func (b BadgerDB) GetKey(entry Entry) string {
 	return entry.ID
+}
+
+// GetDate extracts date from the given entry
+func (b BadgerDB) GetDate(entry Entry) string {
+	splitID := strings.Split(entry.ID, EntryIDDateSeparator)
+	date := splitID[0]
+	return date
 }
 
 // GetBadgerDB returns a reference to BadgerDB struct
