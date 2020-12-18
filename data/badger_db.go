@@ -25,7 +25,26 @@ func (b BadgerDB) Write(entry Entry) error {
 // Read retrives entry with given id from the database
 func (b BadgerDB) Read(id string) (Entry, error) {
 	var e Entry
-	return e, nil
+
+	err := b.db.View(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte(id))
+		if err != nil {
+			return err
+		}
+
+		err = item.Value(func(val []byte) error {
+			entry, err := b.dbUtils.Decode(val)
+			if err != nil {
+				return err
+			}
+			e = entry
+			return nil
+		})
+
+		return err
+	})
+
+	return e, err
 }
 
 // Close closes connection to database
