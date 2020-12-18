@@ -10,6 +10,7 @@ import (
 // BadgerDB represents a Badger database
 type BadgerDB struct {
 	db      *badger.DB
+	dbUtils BadgerDBUtils
 }
 
 // Write writes given entry to database
@@ -34,10 +35,15 @@ func (b BadgerDB) GetKey(entry Entry) string {
 }
 
 // GetBadgerDB returns a reference to BadgerDB struct
-func GetBadgerDB(location string) (*BadgerDB, error) {
+func GetBadgerDB(location string, dbUtils BadgerDBUtils) (*BadgerDB, error) {
+	var utils BadgerDBUtils = BadgerDBUtilsDefault{}
+	if dbUtils != nil {
+		utils = dbUtils
+	}
 	db, err := badger.Open(badger.DefaultOptions(location))
 	badgerDB := &BadgerDB{
-		db:	db,
+		db:      db,
+		dbUtils: utils,
 	}
 	return badgerDB, err
 }
@@ -84,5 +90,12 @@ func (b BadgerDBUtilsDefault) EncodeList(entryList []Entry) ([]byte, error) {
 
 // DecodeList returns entry after decoding the given value
 func (b BadgerDBUtilsDefault) DecodeList(value []byte) ([]Entry, error) {
-	return nil, nil
+	var idList []string
+	var entryList []Entry
+	d := gob.NewDecoder(bytes.NewReader(value))
+	err := d.Decode(&idList)
+	for _, id := range idList {
+		entryList = append(entryList, Entry{ID: id})
+	}
+	return entryList, err
 }
