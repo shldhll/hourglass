@@ -19,7 +19,28 @@ type BadgerDB struct {
 
 // Write writes given entry to database
 func (b BadgerDB) Write(entry Entry) error {
-	return nil
+	key := []byte(b.GetKey(entry))
+
+	existingEntry, err := b.Read(string(key))
+	if err != nil && err != badger.ErrKeyNotFound {
+		return err
+	}
+
+	if err != badger.ErrKeyNotFound {
+		entry.Duration += existingEntry.Duration
+	}
+
+	value, err := b.dbUtils.Encode(entry)
+	if err != nil {
+		return err
+	}
+
+	err = b.db.Update(func(txn *badger.Txn) error {
+		err := txn.Set(key, value)
+		return err
+	})
+
+	return err
 }
 
 // Read retrives entry with given id from the database
