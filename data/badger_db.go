@@ -1,6 +1,8 @@
 package data
 
 import (
+	"fmt"
+	"errors"
 	"strings"
 	"bytes"
 	"encoding/gob"
@@ -8,8 +10,12 @@ import (
 	"github.com/dgraph-io/badger"
 )
 
-// EntryIDDateSeparator is used for separating date from the rest
-const EntryIDDateSeparator = "_"
+const (
+	// EntryIDDateSeparator is used for separating date from the rest
+	EntryIDDateSeparator = "_"
+	// ErrReadPrefixText is used as prefix text for read errors
+	ErrReadPrefixText = "Following errors occurred while reading the entries:"
+)
 
 // BadgerDB represents a Badger database
 type BadgerDB struct {
@@ -92,6 +98,34 @@ func (b BadgerDB) ReadIDList(date string) ([]string, error) {
 		return err
 	})
 	return list, err
+}
+
+// ReadList returns list of entries matching the given date
+func (b BadgerDB) ReadList(date string) ([]Entry, error) {
+	var errStr strings.Builder
+	entryList := []Entry{}
+
+	idList, err := b.ReadIDList(date)
+	if err != nil {
+		return entryList, err
+	}
+
+	for _, entryID := range idList {
+		entry, err := b.Read(entryID)
+		if err != nil {
+			fmt.Fprintf(&errStr, "%q, ", err.Error())
+			continue
+		}
+
+		entryList = append(entryList, entry)
+	}
+
+	if len(errStr.String()) != 0 {
+		err := errors.New(fmt.Sprint(ErrReadPrefixText, errStr.String()))
+		return entryList, err
+	}
+
+	return entryList, err
 }
 
 // Close closes connection to database
