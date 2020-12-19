@@ -68,6 +68,32 @@ func (b BadgerDB) Read(id string) (Entry, error) {
 	return e, err
 }
 
+// ReadIDList retrieves list of IDs matching the given date
+func (b BadgerDB) ReadIDList(date string) ([]string, error) {
+	var list []string
+
+	err := b.db.View(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte(date))
+		if err != nil {
+			return err
+		}
+
+		err = item.Value(func(val []byte) error {
+			entryList, err := b.dbUtils.DecodeList(val)
+			if err != nil {
+				return err
+			}
+			for _, entry := range entryList {
+				list = append(list, entry.ID)
+			}
+			return nil
+		})
+
+		return err
+	})
+	return list, err
+}
+
 // Close closes connection to database
 func (b BadgerDB) Close() error {
 	return b.db.Close()
