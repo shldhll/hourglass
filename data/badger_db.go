@@ -128,6 +128,50 @@ func (b BadgerDB) ReadList(date string) ([]Entry, error) {
 	return entryList, err
 }
 
+// WriteList writes given entry into matching list of entries
+func (b BadgerDB) WriteList(entry Entry) error {
+	var entryList []Entry = make([]Entry, 1)
+	entryList[0] = entry
+
+	key := []byte(b.GetDate(entry))
+
+	existingEntryIDList, err := b.ReadIDList(string(key))
+	if err != nil && err != badger.ErrKeyNotFound {
+		return err
+	}
+	var existingEntryList []Entry
+	for _, entryID := range existingEntryIDList {
+		existingEntryList = append(existingEntryList, Entry{ID: entryID})
+	}
+
+	if err != badger.ErrKeyNotFound {
+		shouldAdd := true
+		for i := range existingEntryList {
+			if existingEntryList[i].ID == entry.ID {
+				shouldAdd = false
+				break
+			}
+		}
+
+		if !shouldAdd {
+			return nil
+		}
+
+		entryList = append(entryList, existingEntryList...)
+	}
+
+	value, err := b.dbUtils.EncodeList(entryList)
+	if err != nil {
+		return err
+	}
+	err = b.db.Update(func(txn *badger.Txn) error {
+		err := txn.Set(key, value)
+		return err
+	})
+
+	return err
+}
+
 // Close closes connection to database
 func (b BadgerDB) Close() error {
 	return b.db.Close()
