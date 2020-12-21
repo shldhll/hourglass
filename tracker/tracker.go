@@ -58,6 +58,24 @@ func Start(o system.OS, db data.DB, cfg system.Config) {
 		currTime := task.Time()
 		errChan := make(chan error)
 
+		if diff := currTime.Sub(prevTime); diff >= minUsageTime {
+			go func(database data.DB, appName string, startTime, endTime time.Time, errorChan chan<- error) {
+				duration := endTime.Sub(startTime)
+				id := CreateID(appName, startTime)
+				entry := data.Entry{
+					ID:       id,
+					AppName:  appName,
+					Duration: duration,
+				}
+
+				err := db.Write(entry)
+				if _, ok := entryDict[entry.ID]; !ok && err == nil {
+					err = db.WriteList(entry)
+				}
+				errorChan <- err
+			}(db, currApp, prevTime, currTime, errChan)
+		}
+
 		cfg.LoopNext()
 	}
 }
