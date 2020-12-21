@@ -18,6 +18,9 @@ const (
 	EntryIDNameReplaceOld = " "
 	// EntryIDNameReplaceNew is the string which replaces EntryIDNameReplaceOld
 	EntryIDNameReplaceNew = ""
+
+	// DBCallNoReturn is used when call to database times out
+	DBCallNoReturn = "Call to DB did not return"
 )
 
 // Task struct represents a running application.
@@ -74,6 +77,20 @@ func Start(o system.OS, db data.DB, cfg system.Config) {
 				}
 				errorChan <- err
 			}(db, currApp, prevTime, currTime, errChan)
+		}
+
+		if currApp != prevApp {
+			prevApp = currApp
+			prevTime = currTime
+		}
+
+		select {
+		case err := <-errChan:
+			if err != nil {
+				o.Log(err.Error())
+			}
+		case <-time.After(cooldownTime):
+			o.Log(DBCallNoReturn)
 		}
 
 		cfg.LoopNext()
