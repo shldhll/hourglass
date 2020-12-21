@@ -2,6 +2,7 @@ package tracker
 
 import (
 	"github.com/shldhll/hourglass/system"
+	"github.com/shldhll/hourglass/data"
 
 	"time"
 	"strings"
@@ -40,6 +41,24 @@ func NewTask(appName string, recordedTime time.Time) *Task {
 	return &Task{
 		applicationName: appName,
 		recordedTime:    recordedTime,
+	}
+}
+
+// Start is the entrypoint function
+func Start(o system.OS, db data.DB, cfg system.Config) {
+	var prevApp string
+	prevTime := o.Now()
+	cooldownTime := cfg.GetCooldownTime()
+	minUsageTime := cfg.GetMinUsageTime()
+	entryDict := make(map[string]data.Entry)
+
+	for cfg.LoopCheck() {
+		task := Ping(o)
+		currApp := task.AppName()
+		currTime := task.Time()
+		errChan := make(chan error)
+
+		cfg.LoopNext()
 	}
 }
 
