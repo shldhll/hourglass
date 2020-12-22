@@ -2,9 +2,12 @@ package tracker_test
 
 import (
 	"github.com/shldhll/hourglass/data"
+	"github.com/shldhll/hourglass/tracker"
 
 	"time"
 	"errors"
+	"reflect"
+	"testing"
 )
 
 var (
@@ -114,5 +117,17 @@ func (s *stubCfg) LoopNext() {
 	s.loopNextCalled++
 	if s.numLoops == s.loopCheckCalled {
 		s.shouldLoop = false
+	}
+}
+
+func TestPing(t *testing.T) {
+	system := stubOS{
+		applicationName: stubName,
+	}
+	got := tracker.Ping(&system)
+	want := tracker.NewTask(stubName, stubTime)
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
 	}
 }
