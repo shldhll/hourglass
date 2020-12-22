@@ -83,3 +83,36 @@ func (s *stubDB) ReadList(date string) ([]data.Entry, error) {
 
 	return []data.Entry{}, nil
 }
+
+type stubCfg struct {
+	numLoops              int
+	shouldLoop            bool
+	getCooldownTimeCalled int
+	getMinUsageTimeCalled int
+	loopCheckCalled       int
+	loopNextCalled        int
+	cooldownTime          time.Duration
+	minUsageTime          time.Duration
+}
+
+func (s *stubCfg) GetCooldownTime() time.Duration {
+	s.getCooldownTimeCalled++
+	return s.cooldownTime
+}
+
+func (s *stubCfg) GetMinUsageTime() time.Duration {
+	s.getMinUsageTimeCalled++
+	return s.minUsageTime
+}
+
+func (s *stubCfg) LoopCheck() bool {
+	s.loopCheckCalled++
+	return s.shouldLoop
+}
+
+func (s *stubCfg) LoopNext() {
+	s.loopNextCalled++
+	if s.numLoops == s.loopCheckCalled {
+		s.shouldLoop = false
+	}
+}
