@@ -65,3 +65,21 @@ func (s *stubDB) Read(key string) (data.Entry, error) {
 
 	return data.Entry{}, nil
 }
+
+func (s *stubDB) WriteList(entry data.Entry) error {
+	s.writeList++
+	if s.showErrorOK != 0 {
+		return stubDBWriteErr
+	}
+
+	return nil
+}
+
+func (s *stubDB) ReadList(date string) ([]data.Entry, error) {
+	s.readList++
+	if s.showErrorOK != 0 {
+		return []data.Entry{}, stubDBWriteErr
+	}
+
+	return []data.Entry{}, nil
+}
