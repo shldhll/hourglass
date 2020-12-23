@@ -154,3 +154,13 @@ func TestNewTask(t *testing.T) {
 		t.Errorf("got %v, want %v", task.Time(), stubTime)
 	}
 }
+
+func TestTaskAppName(t *testing.T) {
+	task := tracker.NewTask(stubName, stubTime)
+	got := task.AppName()
+	want := stubName
+
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
