@@ -142,3 +142,15 @@ func TestCreateID(t *testing.T) {
 		t.Errorf("got %q, want %q", got, want)
 	}
 }
+
+func TestNewTask(t *testing.T) {
+	task := tracker.NewTask(stubName, stubTime)
+
+	if task.AppName() != stubName {
+		t.Errorf("got %v, want %v", task.AppName(), stubName)
+	}
+
+	if task.Time() != stubTime {
+		t.Errorf("got %v, want %v", task.Time(), stubTime)
+	}
+}
