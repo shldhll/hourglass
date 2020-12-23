@@ -174,3 +174,29 @@ func TestTaskTime(t *testing.T) {
 		t.Errorf("got %v, want %v", got, want)
 	}
 }
+
+func TestStart(t *testing.T) {
+	t.Run("OS functions called", func(t *testing.T) {
+		system := stubOS{
+			applicationName: stubName,
+			realTime:        true,
+		}
+		db := stubDB{
+			showErrorOK: 0,
+		}
+		config := stubCfg{
+			shouldLoop:   true,
+			numLoops:     1,
+			cooldownTime: stubCooldownTime,
+			minUsageTime: stubMinUsageTime,
+		}
+
+		tracker.Start(&system, &db, &config)
+		if system.getAppNameCalled == 0 {
+			t.Error("GetApplicationName() not called")
+		}
+		if system.nowCalled == 0 {
+			t.Error("Now() not called")
+		}
+	})
+}
