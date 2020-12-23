@@ -8,6 +8,8 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"strings"
+	"fmt"
 )
 
 var (
@@ -129,5 +131,14 @@ func TestPing(t *testing.T) {
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestCreateID(t *testing.T) {
+	got := tracker.CreateID(stubName, stubTime)
+	want := fmt.Sprintf(tracker.EntryIDStringFormat, stubTime.Format(tracker.EntryIDDateFormat), strings.ReplaceAll(stubName, tracker.EntryIDNameReplaceOld, tracker.EntryIDNameReplaceNew))
+
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
 }
