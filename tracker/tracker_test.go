@@ -199,4 +199,27 @@ func TestStart(t *testing.T) {
 			t.Error("Now() not called")
 		}
 	})
+
+	t.Run("DB write called", func(t *testing.T) {
+		system := stubOS{
+			applicationName: stubName,
+			realTime:        true,
+		}
+		db := stubDB{
+			showErrorOK: 0,
+		}
+		config := stubCfg{
+			shouldLoop:   true,
+			numLoops:     1,
+			cooldownTime: stubCooldownTime,
+			minUsageTime: stubMinUsageTime,
+		}
+
+		tracker.Start(&system, &db, &config)
+
+		if db.write == 0 {
+			t.Error("DB not called enough times")
+		}
+	})
+
 }
