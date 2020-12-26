@@ -282,4 +282,31 @@ func TestStart(t *testing.T) {
 			t.Errorf("timed out")
 		}
 	})
+
+	t.Run("Database write error", func(t *testing.T) {
+		system := stubOS{
+			applicationName: stubName,
+			realTime:        true,
+			shouldLog:       1,
+			logChan:         make(chan string, 10),
+		}
+		db := stubDB{showErrorOK: 1}
+		config := stubCfg{
+			shouldLoop:   true,
+			numLoops:     1,
+			cooldownTime: stubCooldownTime,
+			minUsageTime: stubMinUsageTime,
+		}
+
+		tracker.Start(&system, &db, &config)
+
+		select {
+		case msg := <-system.logChan:
+			if msg != stubDBWriteErr.Error() {
+				t.Errorf("got %q, want %q", msg, tracker.DBCallNoReturn)
+			}
+		case <-time.After(1 * time.Second):
+			t.Errorf("timed out")
+		}
+	})
 }
