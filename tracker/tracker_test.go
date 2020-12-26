@@ -255,4 +255,31 @@ func TestStart(t *testing.T) {
 			t.Error("LoopNext() not called")
 		}
 	})
+
+	t.Run("Database write timeout", func(t *testing.T) {
+		system := stubOS{
+			applicationName: stubName,
+			realTime:        true,
+			shouldLog:       1,
+			logChan:         make(chan string, 10),
+		}
+		db := stubDB{}
+		config := stubCfg{
+			shouldLoop:   true,
+			numLoops:     1,
+			cooldownTime: stubMinUsageTime,
+			minUsageTime: stubMinUsageTime,
+		}
+
+		tracker.Start(&system, &db, &config)
+
+		select {
+		case msg := <-system.logChan:
+			if msg != tracker.DBCallNoReturn {
+				t.Errorf("got %v, want %v", msg, tracker.DBCallNoReturn)
+			}
+		case <-time.After(1 * time.Second):
+			t.Errorf("timed out")
+		}
+	})
 }
