@@ -222,4 +222,37 @@ func TestStart(t *testing.T) {
 		}
 	})
 
+	t.Run("Config functions called", func(t *testing.T) {
+		system := stubOS{
+			applicationName: stubName,
+			realTime:        true,
+		}
+		db := stubDB{
+			showErrorOK: 0,
+		}
+		config := stubCfg{
+			shouldLoop:   true,
+			numLoops:     1,
+			cooldownTime: stubCooldownTime,
+			minUsageTime: stubMinUsageTime,
+		}
+
+		tracker.Start(&system, &db, &config)
+
+		if config.getCooldownTimeCalled == 0 {
+			t.Error("GetCooldownTime() not called")
+		}
+
+		if config.getMinUsageTimeCalled == 0 {
+			t.Error("MinUsageTime() not called")
+		}
+
+		if config.loopCheckCalled == 0 {
+			t.Error("LoopCheck() not called")
+		}
+
+		if config.loopNextCalled == 0 {
+			t.Error("LoopNext() not called")
+		}
+	})
 }
