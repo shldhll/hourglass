@@ -17,6 +17,13 @@ var (
 	stubDBWriteErr = errors.New("Error occurred while writing data")
 )
 
+const (
+	stubName         = "App Name"
+	stubCooldownTime = 1 * time.Second
+	stubMinUsageTime = 1 * time.Nanosecond
+	stubDuration     = 1 * time.Hour
+)
+
 type stubOS struct {
 	applicationName  string
 	realTime         bool
