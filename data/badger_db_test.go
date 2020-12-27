@@ -16,10 +16,26 @@ func TestGetBadgerDB(t *testing.T) {
 	defer db.Close()
 }
 
+func TestBadgerDBClose(t *testing.T) {
+	defer clean()
+	db, err := data.GetBadgerDB(dbLocation, nil)
+	assertErrorFatal(t, err)
+
+	err = db.Close()
+	assertError(t, err)
+}
+
 func assertError(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
 		t.Errorf("No error expected, got %v", err)
+	}
+}
+
+func assertErrorFatal(t *testing.T, err error) {
+	t.Helper()
+	if err != nil {
+		t.Fatalf("No error expected, got %v", err)
 	}
 }
 
