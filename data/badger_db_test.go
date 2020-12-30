@@ -2,12 +2,21 @@ package data_test
 
 import (
 	"github.com/shldhll/hourglass/data"
+	"github.com/shldhll/hourglass/tracker"
 
 	"testing"
 	"os"
+	"reflect"
+	"time"
 )
 
-const dbLocation = "./db_test_dir"
+const (
+	dbLocation      = "./db_test_dir"
+	stubName        = "App Name"
+	stubDuration    = 1 * time.Hour
+)
+
+var stubTime = time.Date(1970, 01, 01, 0, 0, 0, 0, time.UTC)
 
 func TestGetBadgerDB(t *testing.T) {
 	defer clean()
@@ -23,6 +32,27 @@ func TestBadgerDBClose(t *testing.T) {
 
 	err = db.Close()
 	assertError(t, err)
+}
+
+func TestBadgerDBWrite(t *testing.T) {
+	t.Run("Simple write test", func(t *testing.T) {
+		defer clean()
+		db, err := data.GetBadgerDB(dbLocation, nil)
+		assertErrorFatal(t, err)
+		defer db.Close()
+
+		entry := createEntry()
+		err = db.Write(entry)
+		assertErrorFatal(t, err)
+
+		got, err := db.Read(db.GetKey(entry))
+		assertErrorFatal(t, err)
+
+		want := entry
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
 }
 
 func assertError(t *testing.T, err error) {
@@ -41,4 +71,9 @@ func assertErrorFatal(t *testing.T, err error) {
 
 func clean() error {
 	return os.RemoveAll(dbLocation)
+}
+
+func createEntry() data.Entry {
+	id := tracker.CreateID(stubName, stubTime)
+	return data.Entry{id, stubName, stubDuration}
 }
