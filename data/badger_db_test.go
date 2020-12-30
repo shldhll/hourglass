@@ -14,6 +14,7 @@ const (
 	dbLocation      = "./db_test_dir"
 	stubName        = "App Name"
 	stubDuration    = 1 * time.Hour
+	multiWriteCount = 3
 )
 
 var stubTime = time.Date(1970, 01, 01, 0, 0, 0, 0, time.UTC)
@@ -48,6 +49,29 @@ func TestBadgerDBWrite(t *testing.T) {
 		got, err := db.Read(db.GetKey(entry))
 		assertErrorFatal(t, err)
 
+		want := entry
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+
+	t.Run("Multi write test", func(t *testing.T) {
+		defer clean()
+		db, err := data.GetBadgerDB(dbLocation, nil)
+		assertErrorFatal(t, err)
+		defer db.Close()
+
+		entry := createEntry()
+
+		for i := 0; i < multiWriteCount; i++ {
+			err = db.Write(entry)
+			assertErrorFatal(t, err)
+		}
+
+		got, err := db.Read(db.GetKey(entry))
+		assertErrorFatal(t, err)
+
+		entry.Duration = stubDuration * multiWriteCount
 		want := entry
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("got %v, want %v", got, want)
