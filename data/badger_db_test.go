@@ -77,6 +77,20 @@ func TestBadgerDBWrite(t *testing.T) {
 			t.Errorf("got %v, want %v", got, want)
 		}
 	})
+
+	t.Run("Empty key write test", func(t *testing.T) {
+		defer clean()
+		db, err := data.GetBadgerDB(dbLocation, nil)
+		assertErrorFatal(t, err)
+		defer db.Close()
+
+		entry := data.Entry{}
+
+		err = db.Write(entry)
+		if err != badger.ErrEmptyKey {
+			assertError(t, err)
+		}
+	})
 }
 
 func assertError(t *testing.T, err error) {
