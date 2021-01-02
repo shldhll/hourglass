@@ -140,6 +140,18 @@ func TestBadgerDBWrite(t *testing.T) {
 			assertError(t, err)
 		}
 	})
+
+	t.Run("Encode error write test", func(t *testing.T) {
+		defer clean()
+		encodeErr := errors.New("Encode error")
+		dbUtils := stubDBUtils{showEncodeErr: true, encodeErr: encodeErr}
+		db, err := data.GetBadgerDB(dbLocation, &dbUtils)
+		assertErrorFatal(t, err)
+		defer db.Close()
+
+		err = db.Write(data.Entry{ID: "id"})
+		assertErrorEqual(t, err, encodeErr)
+	})
 }
 
 func assertError(t *testing.T, err error) {
@@ -153,6 +165,13 @@ func assertErrorFatal(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
 		t.Fatalf("No error expected, got %v", err)
+	}
+}
+
+func assertErrorEqual(t *testing.T, got, want error) {
+	t.Helper()
+	if got.Error() != want.Error() {
+		t.Errorf("want %q, got %q", want.Error(), got.Error())
 	}
 }
 
