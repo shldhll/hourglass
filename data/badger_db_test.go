@@ -8,6 +8,7 @@ import (
 	"os"
 	"reflect"
 	"time"
+	"errors"
 )
 
 const (
@@ -18,6 +19,54 @@ const (
 )
 
 var stubTime = time.Date(1970, 01, 01, 0, 0, 0, 0, time.UTC)
+
+type stubDBUtils struct {
+	errDelayCount      int
+	encodeErrCount     int
+	decodeErrCount     int
+	encodeListErrCount int
+	decodeListErrCount int
+	encodeErr          error
+	decodeErr          error
+	encodeListErr      error
+	decodeListErr      error
+	showEncodeErr      bool
+	showDecodeErr      bool
+	showEncodeListErr  bool
+	showDecodeListErr  bool
+}
+
+func (s *stubDBUtils) Encode(data.Entry) ([]byte, error) {
+	if s.showEncodeErr && s.encodeErrCount >= s.errDelayCount {
+		return []byte{}, s.encodeErr
+	}
+	s.encodeErrCount++
+	return nil, nil
+}
+
+func (s *stubDBUtils) Decode([]byte) (data.Entry, error) {
+	if s.showDecodeErr && s.decodeErrCount >= s.errDelayCount {
+		return data.Entry{}, s.decodeErr
+	}
+	s.decodeErrCount++
+	return data.Entry{}, nil
+}
+
+func (s *stubDBUtils) EncodeList([]data.Entry) ([]byte, error) {
+	if s.showEncodeListErr && s.encodeListErrCount >= s.errDelayCount {
+		return nil, s.encodeListErr
+	}
+	s.encodeListErrCount++
+	return nil, nil
+}
+
+func (s *stubDBUtils) DecodeList([]byte) ([]data.Entry, error) {
+	if s.showDecodeListErr && s.decodeListErrCount >= s.errDelayCount {
+		return nil, errors.New("DecodeList error")
+	}
+	s.decodeListErrCount++
+	return nil, nil
+}
 
 func TestGetBadgerDB(t *testing.T) {
 	defer clean()
