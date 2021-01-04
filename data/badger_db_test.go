@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"time"
 	"errors"
+	"fmt"
 )
 
 const (
@@ -154,6 +155,47 @@ func TestBadgerDBWrite(t *testing.T) {
 	})
 }
 
+func TestBadgerDBWriteList(t *testing.T) {
+	t.Run("WriteList test", func(t *testing.T) {
+		defer clean()
+		db, err := data.GetBadgerDB(dbLocation, nil)
+		assertErrorFatal(t, err)
+		defer db.Close()
+
+		num := 5
+		entryList := createEntryList(num)
+		want := make([]string, num)
+
+		for i, entry := range entryList {
+			err = db.WriteList(entry)
+			assertErrorFatal(t, err)
+			want[i] = entry.ID
+		}
+
+		for i, entry := range entryList {
+			err = db.WriteList(entry)
+			assertErrorFatal(t, err)
+			want[i] = entry.ID
+		}
+
+		got, err := db.ReadIDList(db.GetDate(entryList[num-1]))
+		assertErrorFatal(t, err)
+
+		for _, entry1 := range got {
+			ok := false
+			for _, entry2 := range want {
+				if entry1 == entry2 {
+					ok = true
+					break
+				}
+			}
+			if !ok {
+				t.Errorf("Entry ID %v of got not found in want", entry1)
+			}
+		}
+	})
+}
+
 func assertError(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
@@ -182,4 +224,13 @@ func clean() error {
 func createEntry() data.Entry {
 	id := tracker.CreateID(stubName, stubTime)
 	return data.Entry{id, stubName, stubDuration}
+}
+
+func createEntryList(num int) []data.Entry {
+	entryList := make([]data.Entry, num)
+	for i := 0; i < num; i++ {
+		id := tracker.CreateID(fmt.Sprint(i), stubTime)
+		entryList[i] = data.Entry{id, stubName, stubDuration}
+	}
+	return entryList
 }
