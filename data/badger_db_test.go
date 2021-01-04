@@ -194,6 +194,42 @@ func TestBadgerDBWriteList(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("Adding/overwriting to existing list", func(t *testing.T) {
+		defer clean()
+		db, err := data.GetBadgerDB(dbLocation, nil)
+		assertErrorFatal(t, err)
+		defer db.Close()
+
+		num := 5
+		entryList := createEntryList(num)
+		want := make([]string, num)
+
+		err = db.WriteList(entryList[num-1])
+		assertErrorFatal(t, err)
+
+		for i, entry := range entryList {
+			err = db.WriteList(entry)
+			assertErrorFatal(t, err)
+			want[i] = entry.ID
+		}
+
+		got, err := db.ReadIDList(db.GetDate(entryList[num-1]))
+		assertErrorFatal(t, err)
+
+		for _, entry1 := range got {
+			ok := false
+			for _, entry2 := range want {
+				if entry1 == entry2 {
+					ok = true
+					break
+				}
+			}
+			if !ok {
+				t.Errorf("Entry ID %v of got not found in want", entry1)
+			}
+		}
+	})
 }
 
 func assertError(t *testing.T, err error) {
