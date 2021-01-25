@@ -10,6 +10,8 @@ import (
 	"time"
 	"errors"
 	"fmt"
+
+	"github.com/dgraph-io/badger"
 )
 
 const (
@@ -230,6 +232,34 @@ func TestBadgerDBWriteList(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("Empty key", func(t *testing.T) {
+		defer clean()
+		db, err := data.GetBadgerDB(dbLocation, nil)
+		assertErrorFatal(t, err)
+		defer db.Close()
+
+		entry := data.Entry{}
+
+		err = db.WriteList(entry)
+		if err != badger.ErrEmptyKey {
+			assertError(t, err)
+		}
+	})
+
+	t.Run("EncodeList error", func(t *testing.T) {
+		defer clean()
+		encodeListErr := errors.New("EncodeList error")
+		dbUtils := stubDBUtils{showEncodeListErr: true, encodeListErr: encodeListErr}
+		db, err := data.GetBadgerDB(dbLocation, &dbUtils)
+		assertErrorFatal(t, err)
+		defer db.Close()
+
+		entry := createEntry()
+
+		err = db.WriteList(entry)
+		assertErrorEqual(t, err, encodeListErr)
+	})
 }
 
 func assertError(t *testing.T, err error) {
@@ -250,6 +280,20 @@ func assertErrorEqual(t *testing.T, got, want error) {
 	t.Helper()
 	if got.Error() != want.Error() {
 		t.Errorf("want %q, got %q", want.Error(), got.Error())
+	}
+}
+
+func assertNotNil(t *testing.T, err error) {
+	t.Helper()
+	if err == nil {
+		t.Errorf("Expected error, got nil")
+	}
+}
+
+func assertEqual(t *testing.T, got, want string) {
+	t.Helper()
+	if got != want {
+		t.Errorf("got %q, want %v", got, want)
 	}
 }
 
