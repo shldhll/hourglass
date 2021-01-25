@@ -297,6 +297,43 @@ func assertEqual(t *testing.T, got, want string) {
 	}
 }
 
+func TestBadgerDBRead(t *testing.T) {
+	t.Run("Read test", func(t *testing.T) {
+		defer clean()
+		db, err := data.GetBadgerDB(dbLocation, nil)
+		assertErrorFatal(t, err)
+		defer db.Close()
+
+		entry := createEntry()
+		err = db.Write(entry)
+		assertErrorFatal(t, err)
+
+		want := entry
+		got, err := db.Read(entry.ID)
+		assertErrorFatal(t, err)
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+
+	t.Run("Decode error", func(t *testing.T) {
+		defer clean()
+		decodeErr := errors.New("Decode error")
+		dbUtils := stubDBUtils{showDecodeErr: true, decodeErr: decodeErr}
+		db, err := data.GetBadgerDB(dbLocation, &dbUtils)
+		assertErrorFatal(t, err)
+		defer db.Close()
+
+		entry := createEntry()
+		err = db.Write(entry)
+		assertErrorFatal(t, err)
+
+		_, err = db.Read(entry.ID)
+		assertErrorEqual(t, err, decodeErr)
+	})
+}
+
 func clean() error {
 	return os.RemoveAll(dbLocation)
 }
