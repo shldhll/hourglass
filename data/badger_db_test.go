@@ -366,6 +366,74 @@ func TestBadgerDBReadIDList(t *testing.T) {
 	})
 }
 
+func TestBadgerDBReadList(t *testing.T) {
+	t.Run("ReadList test", func(t *testing.T) {
+		defer clean()
+		db, err := data.GetBadgerDB(dbLocation, nil)
+		assertErrorFatal(t, err)
+		defer db.Close()
+
+		num := 5
+		entryList := createEntryList(num)
+
+		for _, entry := range entryList {
+			err := db.Write(entry)
+			assertErrorFatal(t, err)
+			err = db.WriteList(entry)
+			assertErrorFatal(t, err)
+		}
+
+		date := db.GetDate(entryList[0])
+		readList, err := db.ReadList(date)
+		assertErrorFatal(t, err)
+
+		for _, entry1 := range entryList {
+			ok := false
+			for _, entry2 := range readList {
+				if entry1.ID == entry2.ID {
+					ok = true
+					break
+				}
+			}
+			if !ok {
+				t.Errorf("Entry %v of entryList not found in readEntryList", entry1)
+			}
+		}
+	})
+
+	t.Run("Error from ReadIDList", func(t *testing.T) {
+		defer clean()
+		db, err := data.GetBadgerDB(dbLocation, nil)
+		assertErrorFatal(t, err)
+		defer db.Close()
+		entry := createEntry()
+
+		date := db.GetDate(entry)
+		_, err = db.ReadList(date)
+		assertErrorEqual(t, err, badger.ErrKeyNotFound)
+	})
+
+	t.Run("Error from Read", func(t *testing.T) {
+		defer clean()
+		db, err := data.GetBadgerDB(dbLocation, nil)
+		assertErrorFatal(t, err)
+		defer db.Close()
+
+		num := 5
+		entryList := createEntryList(num)
+
+		for _, entry := range entryList {
+			err = db.WriteList(entry)
+			assertErrorFatal(t, err)
+		}
+
+		date := db.GetDate(entryList[0])
+		_, err = db.ReadList(date)
+		assertNotNil(t, err)
+
+	})
+}
+
 func assertError(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
