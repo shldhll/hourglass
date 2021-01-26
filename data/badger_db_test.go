@@ -262,41 +262,6 @@ func TestBadgerDBWriteList(t *testing.T) {
 	})
 }
 
-func assertError(t *testing.T, err error) {
-	t.Helper()
-	if err != nil {
-		t.Errorf("No error expected, got %v", err)
-	}
-}
-
-func assertErrorFatal(t *testing.T, err error) {
-	t.Helper()
-	if err != nil {
-		t.Fatalf("No error expected, got %v", err)
-	}
-}
-
-func assertErrorEqual(t *testing.T, got, want error) {
-	t.Helper()
-	if got.Error() != want.Error() {
-		t.Errorf("want %q, got %q", want.Error(), got.Error())
-	}
-}
-
-func assertNotNil(t *testing.T, err error) {
-	t.Helper()
-	if err == nil {
-		t.Errorf("Expected error, got nil")
-	}
-}
-
-func assertEqual(t *testing.T, got, want string) {
-	t.Helper()
-	if got != want {
-		t.Errorf("got %q, want %v", got, want)
-	}
-}
-
 func TestBadgerDBRead(t *testing.T) {
 	t.Run("Read test", func(t *testing.T) {
 		defer clean()
@@ -332,6 +297,108 @@ func TestBadgerDBRead(t *testing.T) {
 		_, err = db.Read(entry.ID)
 		assertErrorEqual(t, err, decodeErr)
 	})
+}
+
+func TestBadgerDBReadIDList(t *testing.T) {
+	t.Run("ReadIDList test", func(t *testing.T) {
+		defer clean()
+		db, err := data.GetBadgerDB(dbLocation, nil)
+		assertErrorFatal(t, err)
+		defer db.Close()
+		num := 5
+		entryList := createEntryList(num)
+		date := db.GetDate(entryList[0])
+
+		for _, entry := range entryList {
+			err := db.Write(entry)
+			assertErrorFatal(t, err)
+			err = db.WriteList(entry)
+			assertErrorFatal(t, err)
+		}
+
+		readEntryList := make([]data.Entry, num)
+		idList, err := db.ReadIDList(date)
+		assertErrorFatal(t, err)
+
+		for i, id := range idList {
+			entry, err := db.Read(id)
+			assertError(t, err)
+			readEntryList[i] = entry
+		}
+
+		for _, entry1 := range entryList {
+			ok := false
+			for _, entry2 := range readEntryList {
+				if entry1.ID == entry2.ID {
+					ok = true
+					break
+				}
+			}
+			if !ok {
+				t.Errorf("Entry %v of entryList not found in readEntryList", entry1)
+			}
+		}
+	})
+
+	t.Run("DecodeList error", func(t *testing.T) {
+		defer clean()
+		num := 5
+		decodeListErr := errors.New("DecodeList error")
+		dbUtils := stubDBUtils{
+			showDecodeListErr: true,
+			decodeListErr:     decodeListErr,
+			errDelayCount:     num - 1}
+		db, err := data.GetBadgerDB(dbLocation, &dbUtils)
+		assertErrorFatal(t, err)
+		defer db.Close()
+		entryList := createEntryList(num)
+		date := db.GetDate(entryList[0])
+
+		for _, entry := range entryList {
+			err := db.Write(entry)
+			assertErrorFatal(t, err)
+			err = db.WriteList(entry)
+			assertErrorFatal(t, err)
+		}
+
+		_, err = db.ReadIDList(date)
+		assertErrorEqual(t, err, decodeListErr)
+	})
+}
+
+func assertError(t *testing.T, err error) {
+	t.Helper()
+	if err != nil {
+		t.Errorf("No error expected, got %v", err)
+	}
+}
+
+func assertErrorFatal(t *testing.T, err error) {
+	t.Helper()
+	if err != nil {
+		t.Fatalf("No error expected, got %v", err)
+	}
+}
+
+func assertErrorEqual(t *testing.T, got, want error) {
+	t.Helper()
+	if got.Error() != want.Error() {
+		t.Errorf("want %q, got %q", want.Error(), got.Error())
+	}
+}
+
+func assertNotNil(t *testing.T, err error) {
+	t.Helper()
+	if err == nil {
+		t.Errorf("Expected error, got nil")
+	}
+}
+
+func assertEqual(t *testing.T, got, want string) {
+	t.Helper()
+	if got != want {
+		t.Errorf("got %q, want %v", got, want)
+	}
 }
 
 func clean() error {
