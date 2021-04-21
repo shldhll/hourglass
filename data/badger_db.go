@@ -195,7 +195,9 @@ func GetBadgerDB(location string, dbUtils BadgerDBUtils) (*BadgerDB, error) {
 	if dbUtils != nil {
 		utils = dbUtils
 	}
-	db, err := badger.Open(badger.DefaultOptions(location))
+	options := badger.DefaultOptions(location)
+	options.Logger = nil
+	db, err := badger.Open(options)
 	badgerDB := &BadgerDB{
 		db:      db,
 		dbUtils: utils,
