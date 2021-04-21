@@ -43,3 +43,13 @@ func (c Cfg) LoopCheck() bool {
 func (c Cfg) LoopNext() {
 	time.Sleep(c.GetCooldownTime())
 }
+
+// GetConfig returns a config struct with the given properties
+func GetConfig(cooldown, minUsage time.Duration) Config {
+	cfg := Cfg{
+		cooldownTime:  cooldown,
+		minUsageTime:  minUsage,
+		loopCheckBool: true,
+	}
+	return cfg
+}

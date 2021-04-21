@@ -1,12 +1,12 @@
 package tracker
 
 import (
-	"github.com/shldhll/hourglass/system"
 	"github.com/shldhll/hourglass/data"
+	"github.com/shldhll/hourglass/system"
 
-	"time"
-	"strings"
 	"fmt"
+	"strings"
+	"time"
 )
 
 const (
@@ -61,7 +61,7 @@ func Start(o system.OS, db data.DB, cfg system.Config) {
 		currTime := task.Time()
 		errChan := make(chan error)
 
-		if diff := currTime.Sub(prevTime); diff >= minUsageTime {
+		if diff := currTime.Sub(prevTime); diff >= minUsageTime && currApp == prevApp {
 			go func(database data.DB, appName string, startTime, endTime time.Time, errorChan chan<- error) {
 				duration := endTime.Sub(startTime)
 				id := CreateID(appName, startTime)
@@ -72,6 +72,7 @@ func Start(o system.OS, db data.DB, cfg system.Config) {
 				}
 
 				err := db.Write(entry)
+				prevTime = currTime
 				if _, ok := entryDict[entry.ID]; !ok && err == nil {
 					err = db.WriteList(entry)
 				}
@@ -79,9 +80,9 @@ func Start(o system.OS, db data.DB, cfg system.Config) {
 			}(db, currApp, prevTime, currTime, errChan)
 		}
 
-		if currApp != prevApp {
+		if prevApp != currApp {
 			prevApp = currApp
-			prevTime = currTime
+			prevApp = currApp
 		}
 
 		select {

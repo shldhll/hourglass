@@ -1,11 +1,11 @@
 package data
 
 import (
-	"fmt"
-	"errors"
-	"strings"
 	"bytes"
 	"encoding/gob"
+	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/dgraph-io/badger"
 )

@@ -1,6 +1,7 @@
 package system
 
 import (
+	"log"
 	"os/exec"
 	"strings"
 	"time"
@@ -8,7 +9,7 @@ import (
 
 const (
 	windowIDSplitSep   = "_NET_ACTIVE_WINDOW(WINDOW): window id # "
-	windowNameSplitSep = "WM_NAME(UTF8_STRING) = "
+	windowNameSplitSep = ") = "
 )
 
 // Current represents the current operating system
@@ -18,6 +19,7 @@ type Current struct{}
 func (c Current) GetApplicationName() (appName string) {
 	windowIDCmd, err := exec.Command("xprop", "-root", "_NET_ACTIVE_WINDOW").Output()
 	if err != nil {
+		log.Fatal(err)
 		return
 	}
 
@@ -50,4 +52,6 @@ func (c Current) Now() time.Time {
 }
 
 // Log is used for system specific logging
-func (c Current) Log(msg string) {}
+func (c Current) Log(msg string) {
+	log.Print(msg)
+}
