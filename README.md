@@ -17,6 +17,6 @@
   <ol>
   <li>Clone the repository</li>
   <li>Install Golang</li>
-  <li>Build and run the application</li>
+  <li>Build and run the application using "hourglass" command in terminal</li>
   </ol>
 </p>
