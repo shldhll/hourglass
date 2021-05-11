@@ -16,7 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"log"
 	"os"
 	"os/exec"
 	"time"
@@ -34,14 +33,15 @@ var startCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		_, err := exec.Command("mkdir", "-p", os.Getenv("HOME")+"/.hourglass").Output()
 		if err != nil {
-			log.Fatal(err)
+			println(err.Error())
 			return
 		}
 		db, err := data.GetBadgerDB(os.Getenv("HOME")+"/.hourglass/data", data.BadgerDBUtilsDefault{})
 		if err != nil {
-			log.Print("db error:", err)
+			println("db error:", err)
 			return
 		}
+		println("started tracking...")
 		tracker.Start(system.Current{}, db, system.GetConfig(1*time.Second, 1*time.Second))
 	},
 }

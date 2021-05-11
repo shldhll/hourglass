@@ -91,7 +91,7 @@ func Start(o system.OS, db data.DB, cfg system.Config) {
 				o.Log(err.Error())
 			}
 		case <-time.After(cooldownTime):
-			o.Log(DBCallNoReturn)
+			cfg.LoopNext()
 		}
 
 		cfg.LoopNext()

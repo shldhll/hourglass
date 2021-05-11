@@ -21,10 +21,12 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 	"text/template"
 	"time"
 
+	"github.com/dgraph-io/badger"
 	"github.com/shldhll/hourglass/data"
 	"github.com/shldhll/hourglass/tracker"
 	"github.com/spf13/cobra"
@@ -38,6 +40,7 @@ const htmlCode = `<!DOCTYPE html>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     </head>
     <body>
+		<center><h1 class="display-3">hourglass</h1></center>
         {{with .Entries}}
         <table class="table">
             <thead>
@@ -84,9 +87,16 @@ var dlCmd = &cobra.Command{
 			startTime = time.Now().AddDate(0, -6, 0)
 		} else if args[0] == "month" {
 			startTime = time.Now().AddDate(0, -30, 0)
+		} else {
+			println("usage: hourglass dl [today|week|month] <filename.html>")
+			return
 		}
 
 		entries := dl(startTime)
+		sort.Slice(entries[:], func(i, j int) bool {
+			return entries[i].Duration > entries[j].Duration
+		})
+
 		ok := make([]task, 0)
 		for _, e := range entries {
 			var t task
@@ -101,6 +111,7 @@ var dlCmd = &cobra.Command{
 			t.Duration = fmt.Sprintf("%02d:%02d:%02d", h, m, s)
 			ok = append(ok, t)
 		}
+
 		t, err := template.New("data").Parse(htmlCode)
 		if err != nil {
 			println("error occured:", err)
@@ -150,8 +161,8 @@ func dl(start time.Time) []data.Entry {
 	for start.Format(tracker.EntryIDDateFormat) != time.Now().AddDate(0, 1, 0).Format(tracker.EntryIDDateFormat) {
 		ok, err := db.ReadList(start.Format(tracker.EntryIDDateFormat))
 		start = start.AddDate(0, 1, 0)
-		if err != nil {
-			println("error while downloading:", err)
+		if err != nil && err != badger.ErrKeyNotFound {
+			println("error while downloading:", err.Error())
 			continue
 		}
 		entries = append(entries, ok...)
