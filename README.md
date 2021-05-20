@@ -6,6 +6,7 @@
   <h3 align="center">hourglass</h3>
   <p align="center">
     Real-time application tracker for Linux<br><br>
+    <img src="https://forthebadge.com/images/badges/made-with-go.svg" />
   </p>
   <h3>Features</h3>
   <ul>
